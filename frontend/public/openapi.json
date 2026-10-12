@@ -4861,6 +4861,14 @@
       "description": "Xray configuration template, outbound management, Warp/Nord/PIA integration, and config testing. All endpoints under /panel/api/xray."
     },
     {
+      "name": "Plans",
+      "description": "Commercial access plans. Each plan has a fixed set of inbounds, a duration, traffic and device limits, and RUB/Telegram Stars prices."
+    },
+    {
+      "name": "Payments and customer store",
+      "description": "Configure Platega, YooKassa and Telegram Stars, inspect the payment journal, and serve the Telegram Mini App. Mini App requests are authenticated with Telegram initData; never trust user IDs supplied separately by the browser."
+    },
+    {
       "name": "Subscription Balancers",
       "description": "Client-side balancers for the JSON subscription: each enabled balancer is emitted as one extra config document whose members are the proxy outbounds of the selected inbounds (routing.balancers + burstObservatory). Managed in Settings → Sub Balancers."
     },
@@ -14898,6 +14906,599 @@
             }
           }
         }
+      }
+    },
+    "/panel/api/plans": {
+      "get": {
+        "tags": [
+          "Plans"
+        ],
+        "summary": "List the plans owned by the authenticated panel user. The standard response envelope contains an array in obj.",
+        "operationId": "get_panel_api_plans",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Plans"
+        ],
+        "summary": "Create a commercial plan with a fixed set of inbounds.",
+        "operationId": "post_panel_api_plans",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "name": "Standard",
+                "description": "Access to three locations",
+                "durationDays": 30,
+                "trafficLimitBytes": 107374182400,
+                "deviceLimit": 3,
+                "inboundIds": [
+                  1,
+                  3
+                ],
+                "yooKassaPriceKopecks": 29900,
+                "plategaPriceKopecks": 28900,
+                "starsPrice": 150,
+                "enabled": true,
+                "sortOrder": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/plans/{id}": {
+      "post": {
+        "tags": [
+          "Plans"
+        ],
+        "summary": "Replace the editable fields of a plan owned by the authenticated user. The standard response envelope contains the saved plan in obj.",
+        "operationId": "post_panel_api_plans_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Plan id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "name": "Standard",
+                "description": "Access to three locations",
+                "durationDays": 30,
+                "trafficLimitBytes": 107374182400,
+                "deviceLimit": 3,
+                "inboundIds": [
+                  1,
+                  3
+                ],
+                "yooKassaPriceKopecks": 29900,
+                "plategaPriceKopecks": 28900,
+                "starsPrice": 150,
+                "enabled": true,
+                "sortOrder": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Plans"
+        ],
+        "summary": "Delete a plan owned by the authenticated user.",
+        "operationId": "delete_panel_api_plans_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Plan id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/payments/config": {
+      "get": {
+        "tags": [
+          "Payments and customer store"
+        ],
+        "summary": "List payment-provider settings. Secret values are never returned.",
+        "operationId": "get_panel_api_payments_config",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Payments and customer store"
+        ],
+        "summary": "Save payment-provider settings. An omitted or empty secret keeps the saved secret; set clearSecret to true to erase it.",
+        "operationId": "post_panel_api_payments_config",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "providers": [
+                  {
+                    "provider": "platega",
+                    "enabled": true,
+                    "merchantId": "merchant-id",
+                    "secret": "secret"
+                  },
+                  {
+                    "provider": "yookassa",
+                    "enabled": true,
+                    "merchantId": "shop-id",
+                    "secret": "secret-key"
+                  },
+                  {
+                    "provider": "stars",
+                    "enabled": true
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/payments/orders": {
+      "get": {
+        "tags": [
+          "Payments and customer store"
+        ],
+        "summary": "List recent customer orders for the authenticated panel user.",
+        "operationId": "get_panel_api_payments_orders",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/store/api/catalog": {
+      "get": {
+        "tags": [
+          "Payments and customer store"
+        ],
+        "summary": "Return enabled plans and enabled payment providers for the public store catalog.",
+        "operationId": "get_store_api_catalog",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/store/api/me": {
+      "get": {
+        "tags": [
+          "Payments and customer store"
+        ],
+        "summary": "Return the Telegram user’s existing VPN profiles, subscription links and recent orders.",
+        "operationId": "get_store_api_me",
+        "parameters": [
+          {
+            "name": "X-Telegram-Init-Data",
+            "in": "header",
+            "required": true,
+            "description": "Raw window.Telegram.WebApp.initData value.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/store/api/checkout": {
+      "post": {
+        "tags": [
+          "Payments and customer store"
+        ],
+        "summary": "Create a plan purchase and return a provider checkout URL. Choose an owned client ID, or use clientId 0 when no profile exists.",
+        "operationId": "post_store_api_checkout",
+        "parameters": [
+          {
+            "name": "X-Telegram-Init-Data",
+            "in": "header",
+            "required": true,
+            "description": "Raw window.Telegram.WebApp.initData value.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "planId": 1,
+                "clientId": 0,
+                "provider": "platega"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/store/api/orders/{uid}": {
+      "get": {
+        "tags": [
+          "Payments and customer store"
+        ],
+        "summary": "Read the payment and access-fulfillment status of an order belonging to the Telegram user.",
+        "operationId": "get_store_api_orders_uid",
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "description": "Order UID returned by checkout.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Telegram-Init-Data",
+            "in": "header",
+            "required": true,
+            "description": "Raw window.Telegram.WebApp.initData value.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/store/api/webhooks/platega": {
+      "post": {
+        "tags": [
+          "Payments and customer store"
+        ],
+        "summary": "Receive a Platega transaction callback; the panel verifies the transaction through Platega before granting access.",
+        "operationId": "post_store_api_webhooks_platega",
+        "parameters": [
+          {
+            "name": "X-MerchantId",
+            "in": "header",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Secret",
+            "in": "header",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/store/api/webhooks/yookassa": {
+      "post": {
+        "tags": [
+          "Payments and customer store"
+        ],
+        "summary": "Receive YooKassa payment notifications; the panel reads the payment from YooKassa before granting access.",
+        "operationId": "post_store_api_webhooks_yookassa",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": []
       }
     },
     "/panel/api/sub-balancers": {

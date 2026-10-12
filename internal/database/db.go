@@ -79,6 +79,9 @@ func allModels() []any {
 		&model.ClientHwid{},
 		&model.ClientExternalLink{},
 		&model.ClientGroup{},
+		&model.Plan{},
+		&model.PaymentProviderConfig{},
+		&model.PaymentOrder{},
 		&model.InboundFallback{},
 		&model.Host{},
 		&model.NodeClientTraffic{},
@@ -115,6 +118,17 @@ func migrateInboundExcludeFromSubColumn() error {
 	return migrator.AddColumn(&model.Inbound{}, "ExcludeFromSub")
 }
 
+func migratePlanProviderPrices() error {
+	migrator := db.Migrator()
+	if !migrator.HasTable(&model.Plan{}) || !migrator.HasColumn(&model.Plan{}, "price_kopecks") {
+		return nil
+	}
+	if err := db.Exec("UPDATE plans SET yoo_kassa_price_kopecks = price_kopecks WHERE yoo_kassa_price_kopecks = 0").Error; err != nil {
+		return err
+	}
+	return db.Exec("UPDATE plans SET platega_price_kopecks = price_kopecks WHERE platega_price_kopecks = 0").Error
+}
+
 func initModels() error {
 	if err := migrateClientTrafficLastSubFetchColumn(); err != nil {
 		return err
@@ -138,6 +152,9 @@ func initModels() error {
 			log.Printf("Error auto migrating model: %v", err)
 			return err
 		}
+	}
+	if err := migratePlanProviderPrices(); err != nil {
+		return err
 	}
 	if err := dropLegacyInboundPortUnique(); err != nil {
 		return err

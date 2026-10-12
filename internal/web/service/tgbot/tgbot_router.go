@@ -80,6 +80,35 @@ func (t *Tgbot) OnReceive() {
 		botHandler = h
 		tgBotMutex.Unlock()
 
+		h.HandlePreCheckoutQuery(func(ctx *th.Context, query telego.PreCheckoutQuery) error {
+			defer recoverBotPanic()
+			valid := false
+			if t.paymentService != nil && query.Currency == "XTR" {
+				_, err := t.paymentService.ValidateStarsOrder(query.InvoicePayload, query.From.ID, int64(query.TotalAmount))
+				valid = err == nil
+			}
+			answer := &telego.AnswerPreCheckoutQueryParams{PreCheckoutQueryID: query.ID, Ok: valid}
+			if !valid {
+				answer.ErrorMessage = "This invoice is no longer valid. Please reopen the VPN shop and try again."
+			}
+			return ctx.Bot().AnswerPreCheckoutQuery(ctx, answer)
+		}, th.AnyPreCheckoutQuery())
+
+		h.HandleMessage(func(ctx *th.Context, message telego.Message) error {
+			defer recoverBotPanic()
+			if message.SuccessfulPayment == nil || t.paymentService == nil || message.From == nil {
+				return nil
+			}
+			payment := message.SuccessfulPayment
+			if payment.Currency != "XTR" {
+				return nil
+			}
+			if err := t.paymentService.ConfirmStarsOrder(payment.InvoicePayload, message.From.ID, int64(payment.TotalAmount), payment.TelegramPaymentChargeID); err != nil {
+				logger.Warning("Telegram Stars payment fulfillment failed:", err)
+			}
+			return nil
+		}, th.AnyMessage())
+
 		h.HandleMessage(func(ctx *th.Context, message telego.Message) error {
 			defer recoverBotPanic()
 			userStateMgr.clear(messageActor(message))
@@ -248,6 +277,16 @@ func (t *Tgbot) answerCommand(message *telego.Message, chatId int64, isAdmin boo
 			msg += t.I18nBot("tgbot.commands.welcome", "Hostname=="+hostname)
 		}
 		msg += "\n\n" + t.I18nBot("tgbot.commands.pleaseChoose")
+	case "shop":
+		storeURL, err := t.storeURL()
+		if err != nil {
+			t.SendMsgToTgbot(chatId, "Магазин сейчас недоступен: настройте публичный домен панели и повторите команду.")
+			return
+		}
+		keyboard := tu.InlineKeyboard(tu.InlineKeyboardRow(
+			tu.InlineKeyboardButton("Открыть тарифы").WithWebApp(tu.WebAppInfo(storeURL)),
+		))
+		t.SendMsgToTgbot(chatId, "Тарифы, оплата и ваши VPN-подключения — в личном кабинете.", keyboard)
 	case "status":
 		onlyMessage = true
 		msg += t.I18nBot("tgbot.commands.status")

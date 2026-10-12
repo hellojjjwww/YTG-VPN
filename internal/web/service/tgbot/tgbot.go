@@ -229,12 +229,17 @@ type Tgbot struct {
 	settingService service.SettingService
 	serverService  service.ServerService
 	xrayService    service.XrayService
+	paymentService *service.PaymentService
 	lastStatus     *service.Status
 }
 
 // NewTgbot creates a new Tgbot instance.
 func (t *Tgbot) NewTgbot() *Tgbot {
 	return new(Tgbot)
+}
+
+func (t *Tgbot) SetPaymentService(payments *service.PaymentService) {
+	t.paymentService = payments
 }
 
 // I18nBot retrieves a localized message for the bot interface.
@@ -380,6 +385,7 @@ func (t *Tgbot) trySetBotCommands(bot *telego.Bot) {
 	err := bot.SetMyCommands(context.Background(), &telego.SetMyCommandsParams{
 		Commands: []telego.BotCommand{
 			{Command: "start", Description: t.I18nBot("tgbot.commands.startDesc")},
+			{Command: "shop", Description: "Open VPN plans and manage access"},
 			{Command: "help", Description: t.I18nBot("tgbot.commands.helpDesc")},
 			{Command: "status", Description: t.I18nBot("tgbot.commands.statusDesc")},
 			{Command: "id", Description: t.I18nBot("tgbot.commands.idDesc")},

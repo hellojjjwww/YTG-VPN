@@ -1,0 +1,241 @@
+.payments-page {
+  --payments-bg: #fbf1e8;
+  --payments-card: #fff;
+  min-height: 100vh;
+  background: var(--payments-bg);
+}
+
+.payments-page.is-dark {
+  --payments-bg: #0d1118;
+  --payments-card: #161d27;
+}
+.payments-page.is-dark.is-ultra {
+  --payments-bg: #07090d;
+  --payments-card: #111722;
+}
+.payments-page .ant-layout,
+.payments-page .ant-layout-content,
+.payments-page .content-shell {
+  background: transparent;
+}
+.payments-page .content-area {
+  padding: 32px;
+}
+.payments-content {
+  width: min(100%, 1320px);
+  margin: 0 auto;
+}
+.payments-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+.payments-heading .ant-typography-title {
+  margin: 0 0 8px;
+  font-family: 'Unbounded Variable', 'Onest Variable', system-ui, sans-serif;
+  letter-spacing: -0.035em;
+}
+.payments-heading .ant-typography-paragraph {
+  max-width: 720px;
+  margin: 0;
+}
+.payments-heading .ant-btn,
+.payments-save-row .ant-btn {
+  min-height: 42px;
+  border-radius: 14px;
+  font-weight: 650;
+}
+.payments-loading {
+  display: grid;
+  min-height: 50vh;
+  place-items: center;
+}
+.payments-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 30px 2px 16px;
+}
+.payments-section-head > .anticon {
+  color: var(--ant-color-primary);
+  font-size: 24px;
+}
+.payments-section-head .ant-typography-title {
+  margin: 0 0 5px;
+  font-family: 'Unbounded Variable', 'Onest Variable', system-ui, sans-serif;
+  font-size: 19px;
+  letter-spacing: -0.03em;
+}
+.payments-section-head .ant-typography-paragraph {
+  margin: 0;
+  font-size: 12px;
+}
+.provider-card,
+.payment-journal {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid
+    color-mix(in srgb, var(--ant-color-primary) 12%, var(--ant-color-border-secondary));
+  border-radius: 20px;
+  background: var(--payments-card);
+  box-shadow: 0 12px 32px rgba(22, 26, 36, 0.055);
+}
+.provider-card .ant-card-body {
+  padding: 20px;
+}
+.provider-card.is-enabled {
+  border-color: color-mix(in srgb, var(--ant-color-primary) 33%, var(--ant-color-border-secondary));
+}
+.provider-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.provider-card-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.provider-card-heading .ant-typography-title {
+  margin: 0 0 3px;
+  font-size: 16px;
+}
+.provider-card-heading .ant-typography-secondary {
+  font-size: 11px;
+}
+.provider-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--ant-color-primary) 13%, transparent);
+  color: var(--ant-color-primary);
+  font-size: 18px;
+}
+.mark-stars {
+  background: #fff4d9;
+  color: #d39b21;
+}
+.provider-field {
+  display: block;
+  margin-top: 13px;
+  color: var(--ant-color-text-secondary);
+  font-size: 11px;
+  font-weight: 650;
+}
+.provider-field .ant-input,
+.provider-field .ant-input-affix-wrapper {
+  margin-top: 7px;
+  border-radius: 11px;
+}
+.provider-field .ant-input-affix-wrapper .ant-input {
+  margin: 0;
+}
+.saved-secret {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 7px;
+  color: var(--ant-color-success);
+  font-size: 10px;
+}
+.saved-secret .ant-btn {
+  padding-inline: 4px;
+  font-size: 10px;
+}
+.callback-field {
+  margin-top: 17px;
+  color: var(--ant-color-text-secondary);
+  font-size: 10px;
+  font-weight: 650;
+}
+.callback-field > div {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 6px;
+  padding: 5px 6px 5px 9px;
+  border: 1px solid var(--ant-color-border-secondary);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ant-color-bg-layout) 60%, transparent);
+}
+.callback-field code {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ant-color-text);
+  font-size: 9px;
+  font-weight: 450;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.callback-field .ant-btn {
+  border-radius: 8px;
+}
+.callback-hint {
+  margin: 7px 0 0 !important;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.stars-help {
+  margin-top: 10px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+.payments-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.journal-head {
+  margin-top: 42px;
+}
+.payment-journal .ant-card-body {
+  padding: 8px 16px 16px;
+}
+.payment-journal .ant-table-wrapper {
+  margin-top: 8px;
+}
+.provider-table-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.provider-table-label .anticon {
+  color: var(--ant-color-primary);
+}
+.payment-journal .ant-tag {
+  border: 0;
+  border-radius: 999px;
+  padding-inline: 9px;
+}
+
+@media (max-width: 768px) {
+  .payments-page .content-area {
+    padding: 66px 16px 22px;
+  }
+  .payments-heading {
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .payments-heading > .ant-btn {
+    width: 100%;
+  }
+  .payments-section-head {
+    align-items: flex-start;
+    margin-top: 24px;
+  }
+  .payments-save-row .ant-btn {
+    width: 100%;
+  }
+  .payment-journal .ant-card-body {
+    padding-inline: 8px;
+  }
+}

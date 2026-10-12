@@ -22,7 +22,7 @@ function resolveDBPath() {
   return '/etc/x-ui/x-ui.db';
 }
 
-const PANEL_API_PREFIXES = ['panel/api/', 'panel/csrf-token'];
+const PANEL_API_PREFIXES = ['panel/api/', 'panel/csrf-token', 'store/api/'];
 
 let cachedBasePath = '/';
 
@@ -108,6 +108,7 @@ function bypassMigratedRoute(req) {
     if (stripped === 'panel' || stripped === 'panel/' || stripped.startsWith('panel/')) {
       return '/index.html';
     }
+    if (stripped === 'store' || stripped === 'store/') return '/store.html';
   }
   return undefined;
 }
@@ -236,6 +237,7 @@ export default defineConfig({
         index: path.resolve(import.meta.dirname, 'index.html'),
         login: path.resolve(import.meta.dirname, 'login.html'),
         subpage: path.resolve(import.meta.dirname, 'subpage.html'),
+        store: path.resolve(import.meta.dirname, 'store.html'),
       },
       output: {
         manualChunks(id) {
@@ -286,7 +288,7 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      '^/(?:[^/]+/)?(login|logout|getTwoFactorEnable|csrf-token|sponsors|panel|server)(?:/|$)': makeBackendProxy(BACKEND_TARGET),
+          '^/(?:[^/]+/)?(login|logout|getTwoFactorEnable|csrf-token|sponsors|store|panel|server)(?:/|$)': makeBackendProxy(BACKEND_TARGET),
       '^/$': makeBackendProxy(BACKEND_TARGET),
       '^/[^/]+/$': makeBackendProxy(BACKEND_TARGET),
       '^/(?:[^/]+/)?ws$': {

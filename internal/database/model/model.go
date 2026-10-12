@@ -968,6 +968,75 @@ type ClientGroup struct {
 
 func (ClientGroup) TableName() string { return "client_groups" }
 
+type Plan struct {
+	Id                int    `json:"id" gorm:"primaryKey;autoIncrement" example:"1"`
+	UserId            int    `json:"-" gorm:"index;not null"`
+	Name              string `json:"name" gorm:"size:120;not null" example:"Standard"`
+	Description       string `json:"description" gorm:"type:text" example:"Access to three locations"`
+	DurationDays      int    `json:"durationDays" gorm:"not null" example:"30"`
+	TrafficLimitBytes int64  `json:"trafficLimitBytes" gorm:"not null;default:0" example:"107374182400"`
+	DeviceLimit       int    `json:"deviceLimit" gorm:"not null;default:0" example:"3"`
+	InboundIds        []int  `json:"inboundIds" gorm:"serializer:json;type:text" example:"[1,3]"`
+	YooKassaPriceKopecks int64 `json:"yooKassaPriceKopecks" gorm:"not null;default:0" example:"29900"`
+	PlategaPriceKopecks  int64 `json:"plategaPriceKopecks" gorm:"not null;default:0" example:"29900"`
+	StarsPrice           int64 `json:"starsPrice" gorm:"not null;default:0" example:"150"`
+	Enabled           bool   `json:"enabled" gorm:"not null;default:true" example:"true"`
+	SortOrder         int    `json:"sortOrder" gorm:"not null;default:0" example:"1"`
+	CreatedAt         int64  `json:"createdAt" gorm:"autoCreateTime:milli" example:"1710000000000"`
+	UpdatedAt         int64  `json:"updatedAt" gorm:"autoUpdateTime:milli" example:"1710000000000"`
+}
+
+func (Plan) TableName() string { return "plans" }
+
+// PaymentProviderConfig contains one checkout adapter's operator supplied
+// credentials. Secret fields are never exposed by JSON responses.
+type PaymentProviderConfig struct {
+	Id         int    `json:"id" gorm:"primaryKey;autoIncrement"`
+	Provider   string `json:"provider" gorm:"uniqueIndex;size:32;not null"`
+	Enabled    bool   `json:"enabled" gorm:"not null;default:false"`
+	MerchantID string `json:"merchantId" gorm:"size:255"`
+	Secret     string `json:"-" gorm:"type:text"`
+	CreatedAt  int64  `json:"createdAt" gorm:"autoCreateTime:milli"`
+	UpdatedAt  int64  `json:"updatedAt" gorm:"autoUpdateTime:milli"`
+}
+
+func (PaymentProviderConfig) TableName() string { return "payment_provider_configs" }
+
+// PaymentOrder is an immutable snapshot of a plan purchase. Provider callbacks
+// update only payment/fulfillment state; plan edits cannot change an open order.
+type PaymentOrder struct {
+	Id                 int    `json:"id" gorm:"primaryKey;autoIncrement"`
+	UserId             int    `json:"-" gorm:"index;not null"`
+	UID                string `json:"uid" gorm:"uniqueIndex;size:36;not null"`
+	TgID               int64  `json:"tgId" gorm:"index;not null"`
+	PlanId             int    `json:"planId" gorm:"not null"`
+	PlanName           string `json:"planName" gorm:"size:120;not null"`
+	PlanDescription    string `json:"planDescription" gorm:"type:text"`
+	DurationDays       int    `json:"durationDays" gorm:"not null"`
+	TrafficLimitBytes  int64  `json:"trafficLimitBytes" gorm:"not null"`
+	DeviceLimit        int    `json:"deviceLimit" gorm:"not null"`
+	InboundIds         []int  `json:"inboundIds" gorm:"serializer:json;type:text"`
+	ClientId           int    `json:"clientId" gorm:"not null;default:0"`
+	ClientEmail        string `json:"clientEmail" gorm:"size:255"`
+	ClientSubID        string `json:"-" gorm:"size:255"`
+	Provider           string `json:"provider" gorm:"size:32;index;not null"`
+	Amount             int64  `json:"amount" gorm:"not null"`
+	Currency           string `json:"currency" gorm:"size:8;not null"`
+	Status             string `json:"status" gorm:"size:24;index;not null"`
+	ProviderPaymentID  string `json:"providerPaymentId" gorm:"size:255;index"`
+	PaymentURL         string `json:"paymentUrl" gorm:"type:text"`
+	FulfillmentStatus  string `json:"fulfillmentStatus" gorm:"size:24;index;not null;default:pending"`
+	TelegramChargeID   string `json:"-" gorm:"size:255;index"`
+	Error              string `json:"error,omitempty" gorm:"type:text"`
+	CreatedAt          int64  `json:"createdAt" gorm:"autoCreateTime:milli"`
+	UpdatedAt          int64  `json:"updatedAt" gorm:"autoUpdateTime:milli"`
+	PaidAt             int64  `json:"paidAt" gorm:"not null;default:0"`
+	TargetExpiry       int64  `json:"targetExpiry" gorm:"not null;default:0"`
+	FulfilledAt        int64  `json:"fulfilledAt" gorm:"not null;default:0"`
+}
+
+func (PaymentOrder) TableName() string { return "payment_orders" }
+
 // MarshalJSON emits the reverse column as a nested JSON object rather than an
 // escaped JSON-text string, matching the same convention Inbound uses for its
 // JSON-text columns. Empty storage renders as null.

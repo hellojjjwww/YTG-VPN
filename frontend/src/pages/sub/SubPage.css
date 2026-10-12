@@ -1,32 +1,32 @@
 .subscription-page {
   /* --sub-grad-* paints graphics, --sub-ink-* paints text: the cyan end darkens
      so text clears 4.5:1. --sub-accent is ACCENT.primary in SubPage.tsx. */
-  --sub-grad-from: #8b5cf6;
-  --sub-grad-to: #06b6d4;
-  --sub-ink-from: #6d28d9;
-  --sub-ink-to: #0e7490;
-  --sub-accent: #7c3aed;
-  --bg-page: linear-gradient(135deg, #e9e4ff 0%, #ddeefc 52%, #e2f7f2 100%);
-  --sub-card-bg: rgba(255, 255, 255, 0.72);
-  --sub-card-border: rgba(255, 255, 255, 0.7);
-  --sub-card-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 20px 56px rgba(124, 58, 237, 0.16);
+  --sub-grad-from: #f07a2e;
+  --sub-grad-to: #2f9e6b;
+  --sub-ink-from: #b24c0c;
+  --sub-ink-to: #1f7650;
+  --sub-accent: #f07a2e;
+  --bg-page: linear-gradient(135deg, #fff8f0 0%, #fbf1e8 54%, #e4f4eb 100%);
+  --sub-card-bg: rgba(255, 255, 255, 0.84);
+  --sub-card-border: rgba(255, 255, 255, 0.82);
+  --sub-card-shadow: 0 1px 3px rgba(22, 26, 36, 0.05), 0 20px 56px rgba(240, 122, 46, 0.13);
   --sub-card-sheen: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.75),
     rgba(255, 255, 255, 0) 42%,
-    rgba(124, 58, 237, 0.22) 88%
+    rgba(240, 122, 46, 0.2) 88%
   );
-  --sub-blob-1: rgba(139, 92, 246, 0.55);
-  --sub-blob-2: rgba(6, 182, 212, 0.45);
-  --sub-grid: rgba(124, 58, 237, 0.06);
-  --sub-hairline: linear-gradient(90deg, rgba(139, 92, 246, 0.4), rgba(6, 182, 212, 0.4));
-  --sub-tile-bg: rgba(124, 58, 237, 0.05);
-  --sub-tile-border: rgba(124, 58, 237, 0.12);
-  --sub-row-bg: rgba(124, 58, 237, 0.045);
-  --sub-row-border: rgba(124, 58, 237, 0.11);
-  --sub-row-bg-hover: rgba(124, 58, 237, 0.09);
-  --sub-row-border-hover: rgba(124, 58, 237, 0.3);
-  --sub-row-glow: rgba(124, 58, 237, 0.28);
+  --sub-blob-1: rgba(240, 122, 46, 0.4);
+  --sub-blob-2: rgba(47, 158, 107, 0.28);
+  --sub-grid: rgba(22, 26, 36, 0.045);
+  --sub-hairline: linear-gradient(90deg, rgba(240, 122, 46, 0.42), rgba(47, 158, 107, 0.35));
+  --sub-tile-bg: rgba(240, 122, 46, 0.055);
+  --sub-tile-border: rgba(240, 122, 46, 0.14);
+  --sub-row-bg: rgba(240, 122, 46, 0.045);
+  --sub-row-border: rgba(240, 122, 46, 0.12);
+  --sub-row-bg-hover: rgba(240, 122, 46, 0.09);
+  --sub-row-border-hover: rgba(240, 122, 46, 0.3);
+  --sub-row-glow: rgba(240, 122, 46, 0.24);
   --sub-glass-bg: rgba(255, 255, 255, 0.6);
 
   position: relative;
@@ -35,42 +35,42 @@
 }
 
 .subscription-page.is-dark {
-  --sub-grad-from: #a78bfa;
-  --sub-grad-to: #22d3ee;
-  --sub-ink-from: #c4b5fd;
-  --sub-ink-to: #67e8f9;
-  --sub-accent: #a78bfa;
-  --bg-page: radial-gradient(ellipse 120% 90% at 18% -10%, #1f1740 0%, #16171d 52%, #101116 100%);
-  --sub-card-bg: rgba(35, 37, 43, 0.62);
-  --sub-card-border: rgba(255, 255, 255, 0.08);
-  --sub-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 24px 64px rgba(109, 40, 217, 0.24);
+  --sub-grad-from: #ff9a57;
+  --sub-grad-to: #45c487;
+  --sub-ink-from: #ffb27a;
+  --sub-ink-to: #73dca8;
+  --sub-accent: #ff843d;
+  --bg-page: radial-gradient(ellipse 120% 90% at 18% -10%, #18222c 0%, #0d1118 54%, #0b1015 100%);
+  --sub-card-bg: rgba(22, 29, 39, 0.86);
+  --sub-card-border: rgba(255, 132, 61, 0.16);
+  --sub-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 24px 64px rgba(0, 0, 0, 0.26);
   --sub-card-sheen: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.16),
     rgba(255, 255, 255, 0) 42%,
-    rgba(167, 139, 250, 0.4) 88%
+    rgba(255, 132, 61, 0.25) 88%
   );
-  --sub-blob-1: rgba(139, 92, 246, 0.4);
-  --sub-blob-2: rgba(34, 211, 238, 0.26);
+  --sub-blob-1: rgba(255, 132, 61, 0.25);
+  --sub-blob-2: rgba(69, 196, 135, 0.17);
   --sub-grid: rgba(255, 255, 255, 0.035);
-  --sub-hairline: linear-gradient(90deg, rgba(167, 139, 250, 0.45), rgba(34, 211, 238, 0.45));
-  --sub-tile-bg: rgba(167, 139, 250, 0.07);
-  --sub-tile-border: rgba(167, 139, 250, 0.14);
-  --sub-row-bg: rgba(167, 139, 250, 0.06);
-  --sub-row-border: rgba(167, 139, 250, 0.12);
-  --sub-row-bg-hover: rgba(167, 139, 250, 0.12);
-  --sub-row-border-hover: rgba(167, 139, 250, 0.35);
-  --sub-row-glow: rgba(139, 92, 246, 0.45);
+  --sub-hairline: linear-gradient(90deg, rgba(255, 132, 61, 0.48), rgba(69, 196, 135, 0.36));
+  --sub-tile-bg: rgba(255, 132, 61, 0.075);
+  --sub-tile-border: rgba(255, 132, 61, 0.18);
+  --sub-row-bg: rgba(255, 132, 61, 0.055);
+  --sub-row-border: rgba(255, 132, 61, 0.14);
+  --sub-row-bg-hover: rgba(255, 132, 61, 0.11);
+  --sub-row-border-hover: rgba(255, 132, 61, 0.34);
+  --sub-row-glow: rgba(255, 132, 61, 0.32);
   --sub-glass-bg: rgba(255, 255, 255, 0.06);
 }
 
 .subscription-page.is-dark.is-ultra {
-  --bg-page: radial-gradient(ellipse 120% 90% at 18% -10%, #120a2b 0%, #050509 55%, #000 100%);
-  --sub-card-bg: rgba(16, 16, 19, 0.68);
-  --sub-card-border: rgba(255, 255, 255, 0.055);
-  --sub-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 24px 64px rgba(88, 28, 135, 0.3);
-  --sub-blob-1: rgba(139, 92, 246, 0.22);
-  --sub-blob-2: rgba(34, 211, 238, 0.14);
+  --bg-page: radial-gradient(ellipse 120% 90% at 18% -10%, #101720 0%, #07090d 55%, #05070a 100%);
+  --sub-card-bg: rgba(17, 23, 34, 0.82);
+  --sub-card-border: rgba(255, 255, 255, 0.06);
+  --sub-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 24px 64px rgba(0, 0, 0, 0.35);
+  --sub-blob-1: rgba(255, 132, 61, 0.18);
+  --sub-blob-2: rgba(69, 196, 135, 0.1);
   --sub-grid: rgba(255, 255, 255, 0.022);
   --sub-glass-bg: rgba(255, 255, 255, 0.04);
 }

@@ -1,6 +1,9 @@
 import { createRoot } from 'react-dom/client';
 import { message } from 'antd';
 import 'antd/dist/reset.css';
+import '@fontsource-variable/onest/wght.css';
+import '@fontsource-variable/unbounded/wght.css';
+import '@/styles/mikan-theme.css';
 
 import { readyI18n } from '@/i18n/react';
 import { ThemeProvider } from '@/hooks/useTheme';

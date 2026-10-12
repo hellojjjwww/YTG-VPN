@@ -429,7 +429,7 @@ html[data-theme='ultra-dark'] .command-palette-modal {
 }
 
 .command-palette-modal.ultra .command-palette-footer {
-  background: #050507;
+  background: #07090d;
   border-top-color: rgba(255, 255, 255, 0.12);
   color: #8c8c8c;
 }

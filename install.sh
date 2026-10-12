@@ -9,6 +9,9 @@ plain='\033[0m'
 xui_folder="${XUI_MAIN_FOLDER:=/usr/local/x-ui}"
 xui_service="${XUI_SERVICE:=/etc/systemd/system}"
 
+ytg_github_repo="${XUI_GITHUB_REPO:-hellojjjwww/YTG-VPN}"
+installer_tty_input=0
+
 # check root
 [[ $EUID -ne 0 ]] && echo -e "${red}Fatal error: ${plain} Please run this script with root privilege \n " && exit 1
 
@@ -40,15 +43,28 @@ arch() {
 
 echo "Arch: $(arch)"
 
-# Non-interactive mode: triggered explicitly via XUI_NONINTERACTIVE=1, or
-# implicitly when stdin is not a TTY (e.g. `curl ... | bash`, cloud-init).
-# In this mode every prompt below is replaced by an env var or a sane default.
-if [[ "${XUI_NONINTERACTIVE:-0}" == "1" ]] || [[ ! -t 0 ]]; then
+# A curl | bash installer keeps its source on stdin, so prompts must read from
+# the controlling terminal instead of consuming the remaining shell source.
+if [[ "${XUI_NONINTERACTIVE:-0}" == "1" ]]; then
     NONINTERACTIVE=1
-else
+elif [[ -t 0 ]]; then
     NONINTERACTIVE=0
+elif [[ -r /dev/tty && -w /dev/tty ]]; then
+    NONINTERACTIVE=0
+    installer_tty_input=1
+else
+    NONINTERACTIVE=1
 fi
 export NONINTERACTIVE
+
+prompt_read() {
+    local prompt="$1" target="$2"
+    if [[ "$installer_tty_input" == "1" ]]; then
+        IFS= read -r -p "$prompt" "$target" </dev/tty
+    else
+        IFS= read -r -p "$prompt" "$target"
+    fi
+}
 
 # Simple helpers
 is_ipv4() {
@@ -62,6 +78,108 @@ is_ip() {
 }
 is_domain() {
     [[ "$1" =~ ^([A-Za-z0-9](-*[A-Za-z0-9])*\.)+(xn--[a-z0-9]{2,}|[A-Za-z]{2,})$ ]] && return 0 || return 1
+}
+
+detect_public_ipv4() {
+    local endpoint candidate
+    for endpoint in https://api4.ipify.org https://ipv4.icanhazip.com https://4.ident.me; do
+        candidate=$(curl -fsS --connect-timeout 2 --max-time 4 "$endpoint" 2>/dev/null | tr -d '[:space:]')
+        if is_ipv4 "$candidate"; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+resolve_domain_ipv4() {
+    if command -v getent >/dev/null 2>&1; then
+        getent ahostsv4 "$1" 2>/dev/null | awk '{print $1}' | sort -u
+    elif command -v nslookup >/dev/null 2>&1; then
+        nslookup "$1" 2>/dev/null | awk '/^Address([0-9]+)?:[[:space:]]/ {print $NF}' | awk -F. 'NF == 4 && $1 <= 255 && $2 <= 255 && $3 <= 255 && $4 <= 255' | sort -u
+    fi
+}
+
+run_install_wizard() {
+    [[ "$NONINTERACTIVE" == "1" || -x "${xui_folder}/x-ui" ]] && return 0
+
+    echo
+    echo -e "${green}╭──────────────────────────────────────────────╮${plain}"
+    echo -e "${green}│          Установка панели YTG-VPN            │${plain}"
+    echo -e "${green}╰──────────────────────────────────────────────╯${plain}"
+    echo "Установщик подготовит сервер, настроит панель и покажет ссылку для входа."
+    echo "Для автоматического HTTPS через Let's Encrypt входящий TCP-порт 80 должен быть доступен."
+    echo
+    echo "Как вы будете открывать панель?"
+    echo "  1) Домен + HTTPS (рекомендуется, если домен уже направлен на этот сервер)"
+    echo "  2) IP-адрес + HTTPS (домен не нужен, TCP-порт 80 должен быть доступен)"
+    echo "  3) Без сертификата (если HTTPS настроен через прокси или SSH-туннель)"
+
+    local access_choice="" domain="" domain_ips="" server_ip=""
+    prompt_read "Выберите вариант [2]: " access_choice
+    access_choice="${access_choice:-2}"
+
+    case "$access_choice" in
+        1)
+            while true; do
+                domain="${XUI_DOMAIN:-}"
+                if [[ -z "$domain" ]]; then
+                    prompt_read "Домен панели (например, vpn.example.com): " domain
+                fi
+                domain="${domain// /}"
+                if ! is_domain "$domain"; then
+                    echo -e "${red}Укажите корректное доменное имя.${plain}"
+                    XUI_DOMAIN=""
+                    continue
+                fi
+
+                domain_ips=$(resolve_domain_ipv4 "$domain")
+                if [[ -z "$domain_ips" ]]; then
+                    echo -e "${yellow}Для ${domain} пока не найдена IPv4 A-запись. Добавьте её и повторите ввод.${plain}"
+                    XUI_DOMAIN=""
+                    continue
+                fi
+
+                server_ip="${XUI_SERVER_IP:-}"
+                if ! is_ipv4 "$server_ip"; then
+                    server_ip=$(detect_public_ipv4 || true)
+                fi
+                if [[ -n "$server_ip" ]] && ! grep -Fxq "$server_ip" <<<"$domain_ips"; then
+                    echo -e "${red}Домен указывает на $(tr '\n' ' ' <<<"$domain_ips"), а публичный IP сервера — ${server_ip}.${plain}"
+                    echo -e "${yellow}Исправьте DNS-запись A и повторите ввод домена.${plain}"
+                    XUI_DOMAIN=""
+                    continue
+                fi
+
+                if [[ -z "$server_ip" ]]; then
+                    echo -e "${yellow}Не удалось автоматически определить внешний IP сервера.${plain}"
+                    echo -e "${yellow}Убедитесь, что A-запись ${domain} указывает на этот сервер.${plain}"
+                else
+                    echo -e "${green}DNS проверен: ${domain} → ${server_ip}.${plain}"
+                fi
+                XUI_DOMAIN="$domain"
+                XUI_SSL_MODE="domain"
+                break
+            done
+            ;;
+        2)
+            XUI_SSL_MODE="ip"
+            ;;
+        3)
+            XUI_SSL_MODE="none"
+            ;;
+        *)
+            echo -e "${yellow}Выбран вариант по умолчанию: IP-адрес + HTTPS.${plain}"
+            XUI_SSL_MODE="ip"
+            ;;
+    esac
+
+    export XUI_SSL_MODE XUI_DOMAIN
+    NONINTERACTIVE=1
+    export NONINTERACTIVE
+    echo
+    echo -e "${green}Настройки сохранены. Установлю SQLite, сгенерирую случайные учётные данные и порт панели.${plain}"
+    echo
 }
 
 # acme.sh's standalone server binds IPv4 by default; --listen-v6 makes it
@@ -133,14 +251,14 @@ gen_random_string() {
 # prompt_or_default VARNAME "prompt text" "default" [ENV_NAME]
 # Interactive: read into VARNAME. Non-interactive: VARNAME = ${ENV_NAME:-default}.
 # ENV_NAME defaults to VARNAME when omitted. Keeps every interactive prompt
-# string byte-for-byte identical to the original `read -rp`.
+# string byte-for-byte identical to its caller.
 prompt_or_default() {
     local __var="$1" __prompt="$2" __default="$3" __env="${4:-$1}"
     if [[ "$NONINTERACTIVE" == "1" ]]; then
         printf -v "$__var" '%s' "${!__env:-$__default}"
     else
         # shellcheck disable=SC2229
-        read -rp "$__prompt" "$__var"
+        prompt_read "$__prompt" "$__var"
     fi
 }
 
@@ -501,7 +619,7 @@ setup_ip_certificate() {
                 echo -e "${red}Port ${WebPort} is busy; cannot proceed in non-interactive mode.${plain}"
                 return 1
             fi
-            read -rp "Enter another port for acme.sh standalone listener (leave empty to abort): " alt_port
+            prompt_read "Enter another port for acme.sh standalone listener (leave empty to abort): " alt_port
             alt_port="${alt_port// /}"
             if [[ -z "${alt_port}" ]]; then
                 echo -e "${red}Port ${WebPort} is busy; cannot proceed.${plain}"
@@ -619,7 +737,7 @@ ssl_cert_issue() {
         fi
     else
         while true; do
-            read -rp "Please enter your domain name: " domain
+            prompt_read "Please enter your domain name: " domain
             domain="${domain// /}" # Trim whitespace
 
             if [[ -z "$domain" ]]; then
@@ -713,13 +831,13 @@ ssl_cert_issue() {
     if [[ "$NONINTERACTIVE" == "1" ]]; then
         setReloadcmd="n"
     else
-        read -rp "Would you like to modify --reloadcmd for ACME? (y/n): " setReloadcmd
+        prompt_read "Would you like to modify --reloadcmd for ACME? (y/n): " setReloadcmd
     fi
     if [[ "$setReloadcmd" == "y" || "$setReloadcmd" == "Y" ]]; then
         echo -e "\n${green}\t1.${plain} Preset: systemctl reload nginx ; systemctl restart x-ui"
         echo -e "${green}\t2.${plain} Input your own command"
         echo -e "${green}\t0.${plain} Keep default reloadcmd"
-        read -rp "Choose an option: " choice
+        prompt_read "Choose an option: " choice
         case "$choice" in
             1)
                 echo -e "${green}Reloadcmd is: systemctl reload nginx ; systemctl restart x-ui${plain}"
@@ -727,7 +845,7 @@ ssl_cert_issue() {
                 ;;
             2)
                 echo -e "${yellow}It's recommended to put x-ui restart at the end${plain}"
-                read -rp "Please enter your custom reloadcmd: " reloadCmd
+                prompt_read "Please enter your custom reloadcmd: " reloadCmd
                 echo -e "${green}Reloadcmd is: ${reloadCmd}${plain}"
                 ;;
             *)
@@ -783,7 +901,7 @@ ssl_cert_issue() {
     if [[ "$NONINTERACTIVE" == "1" ]]; then
         setPanel="y"
     else
-        read -rp "Would you like to set this certificate for the panel? (y/n): " setPanel
+        prompt_read "Would you like to set this certificate for the panel? (y/n): " setPanel
     fi
     if [[ "$setPanel" == "y" || "$setPanel" == "Y" ]]; then
         local webCertFile="/root/cert/${domain}/fullchain.pem"
@@ -836,7 +954,7 @@ prompt_and_setup_ssl() {
                 ;;
         esac
     else
-        read -rp "Choose an option (default 2 for IP): " ssl_choice
+        prompt_read "Choose an option (default 2 for IP): " ssl_choice
         ssl_choice="${ssl_choice// /}" # Trim whitespace
 
         # Default to 2 (IP cert) if input is empty or invalid (not 1, 3 or 4)
@@ -875,11 +993,11 @@ prompt_and_setup_ssl() {
             # routing / multi-WAN the echo services can return a transit address.
             if [[ "$NONINTERACTIVE" != "1" ]]; then
                 local ip_confirm=""
-                read -rp "Is ${server_ip} the correct incoming public IPv4 address for this server? [Default y]: " ip_confirm
+                prompt_read "Is ${server_ip} the correct incoming public IPv4 address for this server? [Default y]: " ip_confirm
                 if [[ -n "$ip_confirm" && "$ip_confirm" != "y" && "$ip_confirm" != "Y" ]]; then
                     server_ip=""
                     while [[ -z "$server_ip" ]]; do
-                        read -rp "Please enter your server's public IPv4 address: " server_ip
+                        prompt_read "Please enter your server's public IPv4 address: " server_ip
                         server_ip="${server_ip// /}"
                         if [[ ! "$server_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                             echo -e "${red}Invalid IPv4 address. Please try again.${plain}"
@@ -918,12 +1036,12 @@ prompt_and_setup_ssl() {
             local custom_domain=""
 
             # 3.1 Request Domain to compose Panel URL later
-            read -rp "Please enter domain name certificate issued for: " custom_domain
+            prompt_read "Please enter domain name certificate issued for: " custom_domain
             custom_domain="${custom_domain// /}" # Remove spaces
 
             # 3.2 Loop for Certificate Path
             while true; do
-                read -rp "Input certificate path (keywords: .crt / fullchain): " custom_cert
+                prompt_read "Input certificate path (keywords: .crt / fullchain): " custom_cert
                 # Strip quotes if present
                 custom_cert=$(echo "$custom_cert" | tr -d '"' | tr -d "'")
 
@@ -940,7 +1058,7 @@ prompt_and_setup_ssl() {
 
             # 3.3 Loop for Private Key Path
             while true; do
-                read -rp "Input private key path (keywords: .key / privatekey): " custom_key
+                prompt_read "Input private key path (keywords: .key / privatekey): " custom_key
                 # Strip quotes if present
                 custom_key=$(echo "$custom_key" | tr -d '"' | tr -d "'")
 
@@ -987,7 +1105,7 @@ prompt_and_setup_ssl() {
                 # Cloud images must stay reachable on their public interface.
                 bind_local="n"
             else
-                read -rp "Bind the panel to 127.0.0.1 only? (recommended — forces SSH tunnel / reverse-proxy access) [y/N]: " bind_local
+                prompt_read "Bind the panel to 127.0.0.1 only? (recommended — forces SSH tunnel / reverse-proxy access) [y/N]: " bind_local
             fi
             if [[ "$bind_local" == "y" || "$bind_local" == "Y" ]]; then
                 ${xui_folder}/x-ui setting -listenIP "127.0.0.1" > /dev/null 2>&1
@@ -1050,7 +1168,7 @@ config_after_install() {
         else
             echo -e "${yellow}Could not auto-detect server IP from any provider.${plain}"
             while [[ -z "$server_ip" ]]; do
-                read -rp "Please enter your server's public IPv4 address: " server_ip
+                prompt_read "Please enter your server's public IPv4 address: " server_ip
                 server_ip="${server_ip// /}"
                 if [[ ! "$server_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                     echo -e "${red}Invalid IPv4 address. Please try again.${plain}"
@@ -1081,7 +1199,7 @@ config_after_install() {
                     db_choice="1"
                 fi
             else
-                read -rp "Choose [1]: " db_choice
+                prompt_read "Choose [1]: " db_choice
                 db_choice="${db_choice:-1}"
             fi
             if [[ "$db_choice" == "2" ]]; then
@@ -1129,11 +1247,11 @@ config_after_install() {
                     echo ""
                     echo -e "  1) Install PostgreSQL locally and create a dedicated user/db (recommended)"
                     echo -e "  2) Use an existing PostgreSQL server (enter DSN)"
-                    read -rp "Choose [1]: " pg_mode
+                    prompt_read "Choose [1]: " pg_mode
                     pg_mode="${pg_mode:-1}"
                     if [[ "$pg_mode" == "2" ]]; then
                         while [[ -z "$xui_dsn" ]]; do
-                            read -rp "Enter PostgreSQL DSN (postgres://user:pass@host:port/dbname?sslmode=disable): " xui_dsn
+                            prompt_read "Enter PostgreSQL DSN (postgres://user:pass@host:port/dbname?sslmode=disable): " xui_dsn
                             xui_dsn="${xui_dsn// /}"
                         done
                         db_label="PostgreSQL (external)"
@@ -1162,7 +1280,7 @@ config_after_install() {
                             echo -e "  2) Enter an external DSN instead"
                             echo -e "  3) Abort install"
                             echo -e "  4) Fall back to SQLite"
-                            read -rp "Choose [1]: " pg_fail
+                            prompt_read "Choose [1]: " pg_fail
                             pg_fail="${pg_fail:-1}"
                             case "$pg_fail" in
                                 2) pg_mode="2" ;;
@@ -1204,9 +1322,9 @@ EOF
                     echo -e "${yellow}Generated random port: ${config_port}${plain}"
                 fi
             else
-                read -rp "Would you like to customize the Panel Port settings? (If not, a random port will be applied) [y/n]: " config_confirm
+                prompt_read "Would you like to customize the Panel Port settings? (If not, a random port will be applied) [y/n]: " config_confirm
                 if [[ "${config_confirm}" == "y" || "${config_confirm}" == "Y" ]]; then
-                    read -rp "Please set up the panel port: " config_port
+                    prompt_read "Please set up the panel port: " config_port
                     echo -e "${yellow}Your Panel Port is: ${config_port}${plain}"
                 else
                     config_port=$(shuf -i 1024-62000 -n 1)
@@ -1233,21 +1351,21 @@ EOF
             # Display final credentials and access information
             echo ""
             echo -e "${green}═══════════════════════════════════════════${plain}"
-            echo -e "${green}     Panel Installation Complete!         ${plain}"
+            echo -e "${green}       Установка YTG-VPN завершена         ${plain}"
             echo -e "${green}═══════════════════════════════════════════${plain}"
-            echo -e "${green}Username:    ${config_username}${plain}"
-            echo -e "${green}Password:    ${config_password}${plain}"
-            echo -e "${green}Port:        ${config_port}${plain}"
-            echo -e "${green}WebBasePath: ${config_webBasePath}${plain}"
-            echo -e "${green}Database:    ${db_label}${plain}"
-            echo -e "${green}Access URL:  ${SSL_SCHEME}://${SSL_HOST}:${config_port}/${config_webBasePath}${plain}"
-            echo -e "${green}API Token:   ${config_apiToken}${plain}"
+            echo -e "${green}Логин:       ${config_username}${plain}"
+            echo -e "${green}Пароль:      ${config_password}${plain}"
+            echo -e "${green}Порт:        ${config_port}${plain}"
+            echo -e "${green}Путь панели: ${config_webBasePath}${plain}"
+            echo -e "${green}База данных: ${db_label}${plain}"
+            echo -e "${green}Ссылка:      ${SSL_SCHEME}://${SSL_HOST}:${config_port}/${config_webBasePath}${plain}"
+            echo -e "${green}API-токен:   ${config_apiToken}${plain}"
             echo -e "${green}═══════════════════════════════════════════${plain}"
-            echo -e "${yellow}⚠ IMPORTANT: Save these credentials securely!${plain}"
+            echo -e "${yellow}Сохраните ссылку и данные для входа в надёжном месте.${plain}"
             if [[ "$SSL_SCHEME" == "https" ]]; then
-                echo -e "${yellow}⚠ SSL Certificate: Enabled and configured${plain}"
+                echo -e "${yellow}HTTPS-сертификат настроен.${plain}"
             else
-                echo -e "${yellow}⚠ SSL Certificate: Skipped — panel is HTTP-only. Use a reverse proxy or SSH tunnel.${plain}"
+                echo -e "${yellow}HTTPS не настроен. Открывайте панель через обратный прокси или SSH-туннель.${plain}"
             fi
 
             if [[ "$db_choice" == "2" ]]; then
@@ -1424,13 +1542,22 @@ _install_xui_service_unit() {
 # fails with "Failed to fetch x-ui version"), and falls back to the API.
 resolve_latest_tag() {
     local url tag
-    url=$(curl -sSLI -o /dev/null -w '%{url_effective}' --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "https://github.com/MHSanaei/3x-ui/releases/latest" 2>/dev/null)
+    url=$(curl -sSLI -o /dev/null -w '%{url_effective}' --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "https://github.com/${ytg_github_repo}/releases/latest" 2>/dev/null)
     tag=${url##*/tag/}
     if [[ "$tag" != "$url" && -n "$tag" && "$tag" != "latest" ]]; then
         echo "$tag"
         return 0
     fi
-    curl -Ls --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'
+    tag=$(curl -Ls --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "https://api.github.com/repos/${ytg_github_repo}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    if [[ -n "$tag" ]]; then
+        echo "$tag"
+        return 0
+    fi
+    if curl -fsSLI --connect-timeout 15 --max-time 60 "https://github.com/${ytg_github_repo}/releases/tag/dev-latest" >/dev/null 2>&1; then
+        echo "dev-latest"
+        return 0
+    fi
+    return 1
 }
 
 # Releases publish <asset>.sha256 next to each archive. A mismatch or a failed
@@ -1469,7 +1596,7 @@ require_repo_files() {
     shift
     [[ "${ref}" == "main" ]] && return 0
     for name in "$@"; do
-        status=$(curl -sIL --retry 3 --connect-timeout 15 -o /dev/null -w '%{http_code}' "https://raw.githubusercontent.com/MHSanaei/3x-ui/${ref}/${name}")
+        status=$(curl -sIL --retry 3 --connect-timeout 15 -o /dev/null -w '%{http_code}' "https://raw.githubusercontent.com/${ytg_github_repo}/${ref}/${name}")
         if [[ "${status}" != "200" ]]; then
             echo -e "${red}${name} is not available for ${ref} (HTTP ${status})${plain}"
             echo -e "${red}Install a release that ships it, or 'dev' for the rolling build. Your existing installation has not been touched.${plain}"
@@ -1489,7 +1616,7 @@ install_x-ui() {
             exit 1
         fi
         echo -e "Got x-ui latest version: ${tag_version}, beginning the installation..."
-        curl -fLR --retry 5 --retry-delay 3 --connect-timeout 15 --speed-limit 1 --speed-time 300 -o ${xui_folder}-linux-$(arch).tar.gz https://github.com/MHSanaei/3x-ui/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz
+        curl -fLR --retry 5 --retry-delay 3 --connect-timeout 15 --speed-limit 1 --speed-time 300 -o ${xui_folder}-linux-$(arch).tar.gz https://github.com/${ytg_github_repo}/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz
         if [[ $? -ne 0 ]]; then
             echo -e "${red}Downloading x-ui failed, please be sure that your server can access GitHub ${plain}"
             exit 1
@@ -1499,7 +1626,7 @@ install_x-ui() {
             echo -e "${red}Downloaded x-ui release archive is empty${plain}"
             exit 1
         fi
-        verify_release_checksum "https://github.com/MHSanaei/3x-ui/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz" "${xui_folder}-linux-$(arch).tar.gz"
+        verify_release_checksum "https://github.com/${ytg_github_repo}/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz" "${xui_folder}-linux-$(arch).tar.gz"
     else
         tag_version=$1
         # The rolling dev channel ships under a fixed, non-semver tag that is
@@ -1518,7 +1645,7 @@ install_x-ui() {
             fi
         fi
 
-        url="https://github.com/MHSanaei/3x-ui/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz"
+        url="https://github.com/${ytg_github_repo}/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz"
         echo -e "Beginning to install x-ui ${tag_version}"
         curl -fLR --retry 5 --retry-delay 3 --connect-timeout 15 --speed-limit 1 --speed-time 300 -o ${xui_folder}-linux-$(arch).tar.gz ${url}
         if [[ $? -ne 0 ]]; then
@@ -1545,7 +1672,7 @@ install_x-ui() {
     require_repo_files "${script_ref}" "${required_files[@]}"
     local xui_script_temp="/usr/bin/x-ui-temp.$$"
     rm -f "${xui_script_temp}"
-    curl -fLRo "${xui_script_temp}" "https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.sh"
+    curl -fLRo "${xui_script_temp}" "https://raw.githubusercontent.com/${ytg_github_repo}/${script_ref}/x-ui.sh"
     if [[ $? -ne 0 ]]; then
         rm -f "${xui_script_temp}"
         echo -e "${red}Failed to download x-ui.sh${plain}"
@@ -1700,7 +1827,7 @@ install_x-ui() {
     if [[ $release == "alpine" ]]; then
         xui_rc_temp="/etc/init.d/x-ui.tmp.$$"
         rm -f "${xui_rc_temp}"
-        curl -fLRo "${xui_rc_temp}" "https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.rc"
+        curl -fLRo "${xui_rc_temp}" "https://raw.githubusercontent.com/${ytg_github_repo}/${script_ref}/x-ui.rc"
         if [[ $? -ne 0 ]]; then
             rm -f "${xui_rc_temp}"
             echo -e "${red}Failed to download x-ui.rc${plain}"
@@ -1765,13 +1892,13 @@ install_x-ui() {
             echo -e "${yellow}Service files not found in tar.gz, downloading from GitHub...${plain}"
             case "${release}" in
                 ubuntu | debian | armbian)
-                    service_unit_url="https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.service.debian"
+                    service_unit_url="https://raw.githubusercontent.com/${ytg_github_repo}/${script_ref}/x-ui.service.debian"
                     ;;
                 arch | manjaro | parch)
-                    service_unit_url="https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.service.arch"
+                    service_unit_url="https://raw.githubusercontent.com/${ytg_github_repo}/${script_ref}/x-ui.service.arch"
                     ;;
                 *)
-                    service_unit_url="https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.service.rhel"
+                    service_unit_url="https://raw.githubusercontent.com/${ytg_github_repo}/${script_ref}/x-ui.service.rhel"
                     ;;
             esac
 
@@ -1799,7 +1926,8 @@ install_x-ui() {
     # works out of the box (no-op when XUI_ENABLE_FAIL2BAN=false). Never fatal.
     setup_fail2ban
 
-    echo -e "${green}x-ui ${tag_version}${plain} installation finished, it is running now..."
+    echo -e "${green}YTG-VPN ${tag_version}: установка завершена, панель запущена.${plain}"
+    echo -e "${yellow}Для управления сервером выполните команду: x-ui${plain}"
     echo -e ""
     echo -e "┌───────────────────────────────────────────────────────┐
 │  ${blue}x-ui control menu usages (subcommands):${plain}              │
@@ -1822,5 +1950,6 @@ install_x-ui() {
 }
 
 echo -e "${green}Running...${plain}"
+run_install_wizard
 install_base
 install_x-ui $1

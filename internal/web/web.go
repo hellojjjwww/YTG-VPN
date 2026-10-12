@@ -123,6 +123,7 @@ type Server struct {
 
 	xrayService    service.XrayService
 	settingService service.SettingService
+	paymentService *service.PaymentService
 	tgbotService   tgbot.Tgbot
 	discordService *discord.DiscordService
 	discordGateway *discord.GatewayClient
@@ -256,9 +257,11 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 	g.GET("/service-worker.js", controller.ServePWAServiceWorker)
 	g.GET("/icons/:name", controller.ServePWAIcon)
 
+	s.paymentService = &service.PaymentService{}
 	s.index = controller.NewIndexController(g)
 	s.panel = controller.NewXUIController(g)
-	s.api = controller.NewAPIController(g)
+	s.api = controller.NewAPIController(g, s.paymentService)
+	controller.NewStoreController(g, s.paymentService)
 
 	// Initialize WebSocket hub
 	s.wsHub = websocket.NewHub()
@@ -751,6 +754,7 @@ func (s *Server) start(restartXray bool, startTgBot bool) (err error) {
 		}
 		// Start() stops any previous receiver first, so it is safe whether or not the bot is already running.
 		tgBot := s.tgbotService.NewTgbot()
+		tgBot.SetPaymentService(s.paymentService)
 		if startErr := tgBot.Start(i18nFS); startErr != nil {
 			logger.Warning("reload Telegram bot failed:", startErr)
 			return
@@ -766,6 +770,7 @@ func (s *Server) start(restartXray bool, startTgBot bool) (err error) {
 		isTgbotenabled, err := s.settingService.GetTgbotEnabled()
 		if (err == nil) && isTgbotenabled {
 			tgBot := s.tgbotService.NewTgbot()
+			tgBot.SetPaymentService(s.paymentService)
 			_ = tgBot.Start(i18nFS)
 			// Subscribe Telegram notifications for event bus
 			s.bus.Subscribe("tg-notifier", s.tgbotService.HandleEvent)

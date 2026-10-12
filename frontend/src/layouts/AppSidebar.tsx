@@ -11,6 +11,7 @@ import {
   CloudServerOutlined,
   ClusterOutlined,
   CodeOutlined,
+  CreditCardOutlined,
   CrownOutlined,
   DashboardOutlined,
   DatabaseOutlined,
@@ -32,6 +33,7 @@ import {
   SafetyOutlined,
   SearchOutlined,
   SettingOutlined,
+  ShoppingOutlined,
   SunOutlined,
   SwapOutlined,
   TagsOutlined,
@@ -52,7 +54,7 @@ const DONATE_URL = 'https://donate.sanaei.dev/';
 // Mac glyph to the Linux and Windows operators who are most of this panel's.
 const SHORTCUT_MODIFIER = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent) ? '⌘' : 'Ctrl';
 const DOCS_URL = 'https://docs.sanaei.dev/';
-const REPO_URL = 'https://github.com/MHSanaei/3x-ui';
+const REPO_URL = 'https://github.com/hellojjjwww/YTG-VPN';
 const LOGOUT_KEY = '__logout__';
 const RAIL_WIDTH = 72;
 const SIDER_WIDTH = 220;
@@ -64,6 +66,8 @@ type IconName =
   | 'dashboard'
   | 'inbound'
   | 'team'
+  | 'plans'
+  | 'payments'
   | 'groups'
   | 'setting'
   | 'tool'
@@ -79,6 +83,8 @@ const iconByName: Record<IconName, ComponentType> = {
   dashboard: DashboardOutlined,
   inbound: ImportOutlined,
   team: TeamOutlined,
+  plans: ShoppingOutlined,
+  payments: CreditCardOutlined,
   groups: TagsOutlined,
   setting: SettingOutlined,
   tool: ToolOutlined,
@@ -228,6 +234,8 @@ export default function AppSidebar() {
       { key: '/', icon: 'dashboard', title: t('menu.dashboard') },
       { key: '/inbounds', icon: 'inbound', title: t('menu.inbounds') },
       { key: '/clients', icon: 'team', title: t('menu.clients') },
+      { key: '/plans', icon: 'plans', title: t('pages.plans.title') },
+      { key: '/payments', icon: 'payments', title: t('pages.payments.title') },
       { key: '/groups', icon: 'groups', title: t('menu.groups') },
       { key: '/nodes', icon: 'cluster', title: t('menu.nodes') },
       { key: '/hosts', icon: 'hosts', title: t('menu.hosts') },

@@ -11,7 +11,7 @@ export interface InstallOptions {
   webBasePath: string;
 }
 
-const REPO_RAW = 'https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh';
+const REPO_RAW = 'https://raw.githubusercontent.com/hellojjjwww/YTG-VPN/main/install.sh';
 const IMAGE = 'ghcr.io/mhsanaei/3x-ui:latest';
 
 function isLatest(version: string): boolean {
@@ -26,9 +26,9 @@ function isLatest(version: string): boolean {
  */
 export function buildScriptCommand(options: InstallOptions): string {
   if (isLatest(options.version)) {
-    return `bash <(curl -Ls ${REPO_RAW})`;
+    return `curl -fsSL ${REPO_RAW} | sudo bash`;
   }
-  return `bash <(curl -Ls ${REPO_RAW}) ${options.version.trim()}`;
+  return `curl -fsSL ${REPO_RAW} | sudo bash -s -- ${options.version.trim()}`;
 }
 
 /** A `docker run` command reflecting the chosen options. */

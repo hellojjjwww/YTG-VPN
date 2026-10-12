@@ -2612,6 +2612,142 @@ export const sections: readonly Section[] = [
   },
 
   {
+    id: 'plans',
+    title: 'Plans',
+    description:
+      'Commercial access plans. Each plan has a fixed set of inbounds, a duration, traffic and device limits, and RUB/Telegram Stars prices.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/plans',
+        summary:
+          'List the plans owned by the authenticated panel user. The standard response envelope contains an array in obj.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/plans',
+        summary: 'Create a commercial plan with a fixed set of inbounds.',
+        body: '{\n  "name": "Standard",\n  "description": "Access to three locations",\n  "durationDays": 30,\n  "trafficLimitBytes": 107374182400,\n  "deviceLimit": 3,\n  "inboundIds": [1, 3],\n  "yooKassaPriceKopecks": 29900,\n  "plategaPriceKopecks": 28900,\n  "starsPrice": 150,\n  "enabled": true,\n  "sortOrder": 1\n}',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/plans/:id',
+        summary:
+          'Replace the editable fields of a plan owned by the authenticated user. The standard response envelope contains the saved plan in obj.',
+        params: [{ name: 'id', in: 'path', type: 'integer', desc: 'Plan id.' }],
+        body: '{\n  "name": "Standard",\n  "description": "Access to three locations",\n  "durationDays": 30,\n  "trafficLimitBytes": 107374182400,\n  "deviceLimit": 3,\n  "inboundIds": [1, 3],\n  "yooKassaPriceKopecks": 29900,\n  "plategaPriceKopecks": 28900,\n  "starsPrice": 150,\n  "enabled": true,\n  "sortOrder": 1\n}',
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/plans/:id',
+        summary: 'Delete a plan owned by the authenticated user.',
+        params: [{ name: 'id', in: 'path', type: 'integer', desc: 'Plan id.' }],
+      },
+    ],
+  },
+
+  {
+    id: 'payments-store',
+    title: 'Payments and customer store',
+    description:
+      'Configure Platega, YooKassa and Telegram Stars, inspect the payment journal, and serve the Telegram Mini App. Mini App requests are authenticated with Telegram initData; never trust user IDs supplied separately by the browser.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/payments/config',
+        summary: 'List payment-provider settings. Secret values are never returned.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/payments/config',
+        summary:
+          'Save payment-provider settings. An omitted or empty secret keeps the saved secret; set clearSecret to true to erase it.',
+        body: '{\n  "providers": [\n    { "provider": "platega", "enabled": true, "merchantId": "merchant-id", "secret": "secret" },\n    { "provider": "yookassa", "enabled": true, "merchantId": "shop-id", "secret": "secret-key" },\n    { "provider": "stars", "enabled": true }\n  ]\n}',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/payments/orders',
+        summary: 'List recent customer orders for the authenticated panel user.',
+        params: [
+          { name: 'limit', in: 'query', type: 'integer', optional: true, defaultValue: 50 },
+          { name: 'offset', in: 'query', type: 'integer', optional: true, defaultValue: 0 },
+        ],
+      },
+      {
+        method: 'GET',
+        path: '/store/api/catalog',
+        summary: 'Return enabled plans and enabled payment providers for the public store catalog.',
+        security: [],
+      },
+      {
+        method: 'GET',
+        path: '/store/api/me',
+        summary:
+          'Return the Telegram user’s existing VPN profiles, subscription links and recent orders.',
+        params: [
+          {
+            name: 'X-Telegram-Init-Data',
+            in: 'header',
+            type: 'string',
+            desc: 'Raw window.Telegram.WebApp.initData value.',
+          },
+        ],
+        security: [],
+      },
+      {
+        method: 'POST',
+        path: '/store/api/checkout',
+        summary:
+          'Create a plan purchase and return a provider checkout URL. Choose an owned client ID, or use clientId 0 when no profile exists.',
+        params: [
+          {
+            name: 'X-Telegram-Init-Data',
+            in: 'header',
+            type: 'string',
+            desc: 'Raw window.Telegram.WebApp.initData value.',
+          },
+        ],
+        body: '{\n  "planId": 1,\n  "clientId": 0,\n  "provider": "platega"\n}',
+        security: [],
+      },
+      {
+        method: 'GET',
+        path: '/store/api/orders/:uid',
+        summary:
+          'Read the payment and access-fulfillment status of an order belonging to the Telegram user.',
+        params: [
+          { name: 'uid', in: 'path', type: 'string', desc: 'Order UID returned by checkout.' },
+          {
+            name: 'X-Telegram-Init-Data',
+            in: 'header',
+            type: 'string',
+            desc: 'Raw window.Telegram.WebApp.initData value.',
+          },
+        ],
+        security: [],
+      },
+      {
+        method: 'POST',
+        path: '/store/api/webhooks/platega',
+        summary:
+          'Receive a Platega transaction callback; the panel verifies the transaction through Platega before granting access.',
+        params: [
+          { name: 'X-MerchantId', in: 'header', type: 'string' },
+          { name: 'X-Secret', in: 'header', type: 'string' },
+        ],
+        security: [],
+      },
+      {
+        method: 'POST',
+        path: '/store/api/webhooks/yookassa',
+        summary:
+          'Receive YooKassa payment notifications; the panel reads the payment from YooKassa before granting access.',
+        security: [],
+      },
+    ],
+  },
+
+  {
     id: 'sub-balancers',
     title: 'Subscription Balancers',
     description:

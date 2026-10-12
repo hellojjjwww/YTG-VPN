@@ -1,0 +1,69 @@
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  background: #fbf1e8;
+  color: #161a24;
+  font-family:
+    'Onest Variable',
+    Onest,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.dark {
+  background: #0d1118;
+  color: #f4f7fb;
+}
+
+html[data-theme='ultra-dark'] body.dark {
+  background: #07090d;
+}
+
+.ant-card {
+  border-radius: 16px;
+}
+
+.ant-modal .ant-modal-content {
+  border-radius: 20px;
+}
+
+.ant-modal .ant-modal-header {
+  border-radius: 20px 20px 0 0;
+}
+
+.ant-btn {
+  font-weight: 600;
+}
+
+.content-area .ant-typography.ant-typography-title {
+  font-family: 'Unbounded Variable', 'Onest Variable', system-ui, sans-serif;
+  letter-spacing: -0.035em;
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-select-selector,
+.ant-picker,
+.ant-input-number-group-addon {
+  border-radius: 11px !important;
+}
+
+.ant-alert {
+  border-radius: 14px;
+}
+
+.ant-tag {
+  border-radius: 999px;
+}
+
+.content-area > .ant-spin-nested-loading > .ant-spin-container {
+  min-height: calc(100vh - 48px);
+}

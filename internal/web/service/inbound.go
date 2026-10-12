@@ -1497,6 +1497,9 @@ func (s *InboundService) delInbound(id int) (bool, func(), error) {
 	}
 
 	if err := db.Transaction(func(tx *gorm.DB) error {
+		if err := disablePlansForInbound(tx, id); err != nil {
+			return err
+		}
 		if err := s.clientService.DetachInbound(tx, id); err != nil {
 			return err
 		}

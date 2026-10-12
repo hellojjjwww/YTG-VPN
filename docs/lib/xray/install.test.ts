@@ -15,23 +15,23 @@ const base: InstallOptions = {
 };
 
 describe('buildScriptCommand', () => {
-  it('uses the master install.sh for the latest version', () => {
+  it('uses the YTG-VPN installer for the latest version', () => {
     expect(buildScriptCommand(base)).toBe(
-      'bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)',
+      'curl -fsSL https://raw.githubusercontent.com/hellojjjwww/YTG-VPN/main/install.sh | sudo bash',
     );
   });
 
-  it('pins a specific version by passing the tag to master install.sh', () => {
+  it('pins a specific version by passing the tag to the installer', () => {
     const cmd = buildScriptCommand({ ...base, version: 'v3.4.1' });
     expect(cmd).toBe(
-      'bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v3.4.1',
+      'curl -fsSL https://raw.githubusercontent.com/hellojjjwww/YTG-VPN/main/install.sh | sudo bash -s -- v3.4.1',
     );
   });
 
   it('supports the rolling dev-latest build', () => {
     const cmd = buildScriptCommand({ ...base, version: 'dev-latest' });
     expect(cmd).toBe(
-      'bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) dev-latest',
+      'curl -fsSL https://raw.githubusercontent.com/hellojjjwww/YTG-VPN/main/install.sh | sudo bash -s -- dev-latest',
     );
   });
 });

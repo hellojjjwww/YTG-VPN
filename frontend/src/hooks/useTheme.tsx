@@ -35,44 +35,54 @@ const initialUltra = readBool(STORAGE_ULTRA, false);
 applyDom(initialDark, initialUltra);
 
 const DARK_TOKENS = {
-  colorBgBase: '#1a1b1f',
-  colorBgLayout: '#1a1b1f',
-  colorBgContainer: '#23252b',
-  colorBgElevated: '#2d2f37',
+  colorBgBase: '#0d1118',
+  colorBgLayout: '#0d1118',
+  colorBgContainer: '#161d27',
+  colorBgElevated: '#263142',
+  colorText: '#f4f7fb',
+  colorTextSecondary: '#a8b2c0',
+  colorPrimary: '#ff843d',
+  colorPrimaryHover: '#ff9b5d',
+  colorPrimaryActive: '#db6317',
+  borderRadius: 12,
+  borderRadiusLG: 20,
+  controlHeight: 40,
+  fontFamily: '"Onest Variable", Onest, system-ui, -apple-system, "Segoe UI", sans-serif',
 };
 const ULTRA_DARK_TOKENS = {
-  colorBgBase: '#000',
-  colorBgLayout: '#000',
-  colorBgContainer: '#101013',
-  colorBgElevated: '#1a1a1e',
+  ...DARK_TOKENS,
+  colorBgBase: '#07090d',
+  colorBgLayout: '#07090d',
+  colorBgContainer: '#111722',
+  colorBgElevated: '#192332',
 };
 const DARK_LAYOUT_TOKENS = {
-  bodyBg: '#1a1b1f',
-  headerBg: '#15161a',
+  bodyBg: '#0d1118',
+  headerBg: '#0d1118',
   headerColor: '#ffffff',
-  footerBg: '#1a1b1f',
-  siderBg: '#15161a',
-  triggerBg: '#23252b',
+  footerBg: '#0d1118',
+  siderBg: '#0a0e14',
+  triggerBg: '#161d27',
   triggerColor: '#ffffff',
 };
 const ULTRA_DARK_LAYOUT_TOKENS = {
-  bodyBg: '#000',
-  headerBg: '#050507',
+  bodyBg: '#07090d',
+  headerBg: '#07090d',
   headerColor: '#ffffff',
-  footerBg: '#000',
-  siderBg: '#050507',
-  triggerBg: '#1a1a1e',
+  footerBg: '#07090d',
+  siderBg: '#05070b',
+  triggerBg: '#111722',
   triggerColor: '#ffffff',
 };
 const DARK_MENU_TOKENS = {
-  darkItemBg: '#15161a',
-  darkSubMenuItemBg: '#1a1b1f',
-  darkPopupBg: '#23252b',
+  darkItemBg: '#0a0e14',
+  darkSubMenuItemBg: '#0d1118',
+  darkPopupBg: '#161d27',
 };
 const ULTRA_DARK_MENU_TOKENS = {
-  darkItemBg: '#050507',
-  darkSubMenuItemBg: '#000',
-  darkPopupBg: '#101013',
+  darkItemBg: '#05070b',
+  darkSubMenuItemBg: '#07090d',
+  darkPopupBg: '#111722',
 };
 const DARK_CARD_TOKENS = {
   colorBorderSecondary: 'rgba(255, 255, 255, 0.06)',
@@ -85,17 +95,30 @@ const STATISTIC_TOKENS = {
   titleFontSize: 11,
 };
 const LIGHT_CONTRAST_TOKENS = {
-  colorTextDescription: 'rgba(0, 0, 0, 0.58)',
-  colorTextTertiary: 'rgba(0, 0, 0, 0.58)',
+  colorBgBase: '#fbf1e8',
+  colorBgLayout: '#fbf1e8',
+  colorBgContainer: '#ffffff',
+  colorBgElevated: '#ffffff',
+  colorText: '#161a24',
+  colorTextSecondary: '#4a5263',
+  colorTextDescription: '#5c6474',
+  colorTextTertiary: '#666d7b',
   colorTextPlaceholder: '#767676',
   colorError: '#cf1322',
   colorErrorText: '#cf1322',
   colorSuccessText: '#237804',
+  colorPrimary: '#f07a2e',
+  colorPrimaryHover: '#db6317',
+  colorPrimaryActive: '#b24c0c',
+  borderRadius: 12,
+  borderRadiusLG: 20,
+  controlHeight: 40,
+  fontFamily: '"Onest Variable", Onest, system-ui, -apple-system, "Segoe UI", sans-serif',
 };
 const LIGHT_BUTTON_TOKENS = {
-  colorPrimary: '#0958d9',
-  colorPrimaryHover: '#2468e5',
-  colorPrimaryActive: '#073ea8',
+  colorPrimary: '#f07a2e',
+  colorPrimaryHover: '#db6317',
+  colorPrimaryActive: '#b24c0c',
 };
 
 // hashed:false drops the `:where(.css-<hash>)` wrapper antd puts around every
