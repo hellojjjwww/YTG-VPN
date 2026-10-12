@@ -186,7 +186,7 @@ func (s *PaymentService) HandlePlategaCallback(ctx context.Context, merchantID, 
 		return fmt.Errorf("verify Platega transaction: %w", err)
 	}
 	confirmedAmount, valid := rublesToKopecks(confirmed.PaymentDetails.Amount)
-	if confirmed.ID != callback.ID || confirmed.Status != "CONFIRMED" || confirmed.PaymentDetails.Currency != "RUB" || confirmedAmount != order.Amount {
+	if !valid || confirmed.ID != callback.ID || confirmed.Status != "CONFIRMED" || confirmed.PaymentDetails.Currency != "RUB" || confirmedAmount != order.Amount {
 		return errors.New("Platega transaction status or amount does not match the order")
 	}
 	if confirmed.Payload != "" && confirmed.Payload != order.UID {

@@ -193,7 +193,7 @@ func (s *PaymentService) providerConfig(provider string) (*model.PaymentProvider
 	if !cfg.Enabled {
 		return nil, fmt.Errorf("%s payments are disabled", provider)
 	}
-	return &cfg, nil
+	return cfg, nil
 }
 
 func (s *PaymentService) GetProviderConfig(provider string) (*model.PaymentProviderConfig, error) {
