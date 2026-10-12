@@ -103,7 +103,7 @@ app/             # Next.js App Router — layouts, home, docs, OG images, search
 components/      # React components — interactive tools, home sections, MDX bindings
 content/docs/    # MDX documentation, one folder per locale (en · fa · ru · zh)
 lib/             # source config, i18n, GitHub stats, and the unit-tested lib/xray logic
-public/          # static assets — logos, favicon, openapi.json, CNAME
+public/          # static assets — logos, favicon, openapi.json
 scripts/         # build-time scripts (API reference generation)
 source.config.ts # Fumadocs MDX schema & collection config
 next.config.mjs  # Next.js config (static-export gating)

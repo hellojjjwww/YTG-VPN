@@ -37,4 +37,4 @@ export const donateUrl = 'https://donate.sanaei.dev/';
 // Defaults to the production domain, so the env var is optional. Use `||` (not
 // `??`) so an empty string — e.g. an unset `${{ vars.NEXT_PUBLIC_SITE_URL }}`
 // in CI — also falls back instead of shipping a blank origin.
-export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://docs.sanaei.dev';
+export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hellojjjwww.github.io/YTG-VPN';
